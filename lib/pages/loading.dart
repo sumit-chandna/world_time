@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart' as spin;
-import 'package:world_time/services/world_time.dart' as worldTime;
+import 'package:get_it/get_it.dart';
+import 'package:world_time/dto/world_time.dart';
+import 'package:world_time/services/world_time_service.dart';
 
 class Loading extends StatefulWidget {
   @override
@@ -8,20 +10,25 @@ class Loading extends StatefulWidget {
 }
 
 class _LoadingState extends State<Loading> {
+  GetIt _getIt = GetIt.instance;
+
   void setupWorldTime() async {
-    worldTime.WorldTime instance = worldTime.WorldTime(
-        location: 'Berlin', flag: 'germany.png', url: 'Europe/Berlin');
-    await instance.fetchTime();
+    WorldTimeService wts = _getIt.get<WorldTimeService>();
+    WorldTime instance = wts.getInitialLocation();
+    await wts.fetchTime(instance);
+    await wts.fetchTimezones();
     Navigator.pushReplacementNamed(context, '/home', arguments: {
       "location": instance.location,
       "flag": instance.flag,
-      "time": instance.time
+      "time": instance.time,
+      "isDayTime": instance.isDayTime
     });
   }
 
   @override
   void initState() {
     super.initState();
+    _getIt.registerSingleton<WorldTimeService>(WorldTimeService());
     setupWorldTime();
   }
 
